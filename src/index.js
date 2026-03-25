@@ -35,6 +35,26 @@ const CTA_KEYWORDS = [
   "apply"
 ];
 
+const SECONDARY_CTA_KEYWORDS = [
+  "pricing",
+  "case study",
+  "results",
+  "learn more",
+  "calculator",
+  "tool",
+  "guide",
+  "download",
+  "see how",
+  "view work"
+];
+
+const GENERIC_CTA_KEYWORDS = [
+  "learn more",
+  "read more",
+  "explore",
+  "discover"
+];
+
 export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") {
@@ -86,7 +106,7 @@ async function handleAnalyze(request, env) {
         })
       : null;
 
-    const extracted = await page.evaluate(({ trustKeywords, ctaKeywords }) => {
+    const extracted = await page.evaluate(({ trustKeywords, ctaKeywords, secondaryCtaKeywords, genericCtaKeywords }) => {
       const clean = value => (value || "").replace(/\s+/g, " ").trim();
       const includesAny = (text, keywords) => {
         const value = (text || "").toLowerCase();
@@ -130,6 +150,8 @@ async function handleAnalyze(request, env) {
       );
 
       const primaryCtas = actions.filter(item => includesAny(item.text, ctaKeywords));
+      const secondaryCtas = actions.filter(item => includesAny(item.text, secondaryCtaKeywords));
+      const genericCtas = actions.filter(item => includesAny(item.text, genericCtaKeywords));
       const trustHits = trustKeywords.filter(keyword => bodyText.toLowerCase().includes(keyword)).length;
 
       return {
@@ -143,11 +165,19 @@ async function handleAnalyze(request, env) {
         imageCount: main.querySelectorAll("img,picture,svg").length,
         sectionCount: main.querySelectorAll("section,[class*='section'],[id*='section']").length,
         formCount: main.querySelectorAll("form").length,
+        actionCount: actions.length,
         primaryCtas,
+        secondaryCtas,
+        genericCtas,
         trustHits,
         hasViewport: !!document.querySelector('meta[name="viewport"]')
       };
-    }, { trustKeywords: TRUST_KEYWORDS, ctaKeywords: CTA_KEYWORDS });
+    }, {
+      trustKeywords: TRUST_KEYWORDS,
+      ctaKeywords: CTA_KEYWORDS,
+      secondaryCtaKeywords: SECONDARY_CTA_KEYWORDS,
+      genericCtaKeywords: GENERIC_CTA_KEYWORDS
+    });
 
     const response = {
       ok: true,
