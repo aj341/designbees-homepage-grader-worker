@@ -23,17 +23,27 @@ const TRUST_KEYWORDS = [
 ];
 
 const CTA_KEYWORDS = [
-  "book",
-  "demo",
-  "start",
-  "trial",
-  "contact",
-  "sales",
-  "schedule",
-  "request",
+  "book a demo",
+  "book demo",
+  "book a call",
+  "get a demo",
+  "request a demo",
+  "request demo",
+  "start free",
+  "start your free",
+  "free trial",
+  "start trial",
   "get started",
-  "talk",
-  "apply"
+  "get started free",
+  "contact sales",
+  "contact us",
+  "contact our team",
+  "schedule a demo",
+  "schedule demo",
+  "request pricing",
+  "apply now",
+  "talk to sales",
+  "talk to us"
 ];
 
 const SECONDARY_CTA_KEYWORDS = [
@@ -487,9 +497,17 @@ function dedupeBy(items, keyFn) {
   });
 }
 
+function normalizeKeywordText(value) {
+  return ` ${String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()} `;
+}
+
 function includesKeyword(text, keywords) {
-  const value = String(text || "").toLowerCase();
-  return keywords.some(keyword => value.includes(keyword));
+  const value = normalizeKeywordText(text);
+  return keywords.some(keyword => value.includes(normalizeKeywordText(keyword)));
 }
 
 function shouldUseFetchFallback(error) {
