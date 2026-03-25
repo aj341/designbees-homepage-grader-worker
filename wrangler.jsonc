@@ -9,6 +9,22 @@
   "browser": {
     "binding": "BROWSER"
   },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "ANALYZER",
+        "class_name": "BrowserAnalyzer"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "BrowserAnalyzer"
+      ]
+    }
+  ],
   "observability": {
     "enabled": true
   }
