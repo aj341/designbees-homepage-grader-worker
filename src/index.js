@@ -394,9 +394,14 @@ function extractSignalsFromHtml(html) {
   const cleanedHtml = html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ");
-  const bodyText = clean(cleanedHtml);
+  const contentHtml = cleanedHtml
+    .replace(/<header[\s\S]*?<\/header>/gi, " ")
+    .replace(/<nav[\s\S]*?<\/nav>/gi, " ")
+    .replace(/<footer[\s\S]*?<\/footer>/gi, " ");
+  const mainHtml = contentHtml.match(/<main[^>]*>([\s\S]*?)<\/main>/i)?.[1] || contentHtml;
+  const bodyText = clean(mainHtml);
   const headingCandidates = dedupe(
-    [...cleanedHtml.matchAll(/<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi)]
+    [...mainHtml.matchAll(/<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi)]
       .map(match => clean(match[1]))
       .filter(Boolean)
       .filter(value => !/^h[1-3]$/i.test(value))
@@ -407,7 +412,9 @@ function extractSignalsFromHtml(html) {
       .map(value => value.trim())
       .filter(value => value.length >= 35)
   ).slice(0, 20);
-  const actions = extractActionsFromHtml(cleanedHtml);
+  const allActions = extractActionsFromHtml(cleanedHtml);
+  const contentActions = extractActionsFromHtml(mainHtml);
+  const actions = contentActions.length ? contentActions : allActions;
   const primaryCtas = actions.filter(item => includesKeyword(item.text, CTA_KEYWORDS));
   const secondaryCtas = actions.filter(item => includesKeyword(item.text, SECONDARY_CTA_KEYWORDS));
   const genericCtas = actions.filter(item => includesKeyword(item.text, GENERIC_CTA_KEYWORDS));
@@ -415,15 +422,16 @@ function extractSignalsFromHtml(html) {
   return {
     title: clean(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || ""),
     metaDescription: clean(html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([\s\S]*?)["'][^>]*>/i)?.[1] || ""),
-    h1: clean(cleanedHtml.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1] || ""),
+    h1: clean(mainHtml.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1] || ""),
     headings: headingCandidates,
     paragraphs: paragraphCandidates,
     bodyTextSample: bodyText.slice(0, 2500),
+    heroTextSample: bodyText.slice(0, 900),
     navLinkCount: (cleanedHtml.match(/<nav[\s\S]*?<\/nav>/gi)?.join(" ").match(/<a\b/gi) || []).length,
-    imageCount: (cleanedHtml.match(/<(img|picture|svg)\b/gi) || []).length,
-    sectionCount: (cleanedHtml.match(/<section\b/gi) || []).length,
-    formCount: (cleanedHtml.match(/<form\b/gi) || []).length,
-    actionCount: actions.length,
+    imageCount: (mainHtml.match(/<(img|picture|svg)\b/gi) || []).length,
+    sectionCount: (mainHtml.match(/<section\b/gi) || []).length,
+    formCount: (mainHtml.match(/<form\b/gi) || []).length,
+    actionCount: allActions.length,
     primaryCtas,
     secondaryCtas,
     genericCtas,
